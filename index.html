@@ -723,13 +723,34 @@
                 referenceFiles.filter(f => f.category === 'text').forEach(f => enriched += `\n[文件: ${f.name}]\n${f.content}\n`);
                 parts.push({ text: enriched });
                 referenceFiles.filter(f => f.category === 'inline').forEach(f => parts.push({ inlineData: { mimeType: f.mimeType, data: f.base64.split(',')[1] } }));
-            } else { parts.push({ text: promptText }); }
+            } else {
+                // 如果沒有附檔，或是非主要生成(如總編講評)，直接推入文字
+                parts.push({ text: promptText });
+            }
 
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            // 將模型設定為 gemini-3.8-flash，並加入針對各工具的專屬 Prompt 指令
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ contents: [{ parts }], systemInstruction: { parts: [{ text: `你是一個高級文體轉譯引擎。輸出必須包含 Markdown 標題：# 主內容、# 標題提案、# AEO 摘要、# 圖像生成 Prompt、# 音樂生成 Prompt、# 影片生成 Prompt。在主內容中，主動將「關鍵字」、「核心觀點」用 Markdown **粗體** 標示。` }] } })
+                body: JSON.stringify({ 
+                    contents: [{ parts }], 
+                    systemInstruction: { 
+                        parts: [{ 
+                            text: `你是一個高級文體轉譯引擎。輸出必須包含嚴格的 Markdown 標題：# 主內容、# 標題提案、# AEO 摘要、# 圖像生成 Prompt、# 音樂生成 Prompt、# 影片生成 Prompt。
+1. 在【主內容】中，主動將「關鍵字」、「核心觀點」用 Markdown **粗體** 標示。
+2. 針對【圖像生成 Prompt】：請專為「ChatGPT Image 2.5」與「Nano Banana Pro」設計，提供富含細節的高畫質英文提示詞 (包含主體、環境、打光、渲染風格)。
+3. 針對【音樂生成 Prompt】：請專為「Suno」及「Gemini 音樂」設計，給出明確的曲風(Genre)、情緒(Mood)、節奏(Tempo)與配器設定。若是歌曲，請加上 [Verse], [Chorus] 等結構標籤。
+4. 針對【影片生成 Prompt】：這是專門設計給「Gemini Omni」模型閱讀的故事腳本。請務必將文章內容拆解，強制以「每 10 秒為一段」的格式輸出分鏡腳本，格式範例如下：
+[00:00 - 00:10]
+- 視覺畫面 (Visual)：...
+- 聲音/旁白 (Audio)：...
+[00:10 - 00:20]
+- 視覺畫面 (Visual)：...
+- 聲音/旁白 (Audio)：...` 
+                        }] 
+                    } 
+                })
             });
-            if (!res.ok) throw new Error("API 錯誤");
+            if (!res.ok) throw new Error("API 錯誤或模型端點異常");
             const data = await res.json();
             return data.candidates[0].content.parts[0].text;
         }
