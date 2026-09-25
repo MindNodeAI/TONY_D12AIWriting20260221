@@ -145,9 +145,9 @@
                 </button>
                 
                 <!-- API Key Config (Dropdown) -->
-                <div class="relative group">
-                    <button class="bg-yellow-600 hover:bg-yellow-700 text-white p-1.5 sm:p-2 rounded-lg transition-colors text-sm shadow-sm" title="設定 API Key"><i class="fas fa-key"></i></button>
-                    <div class="absolute right-0 top-full mt-2 w-64 sm:w-72 bg-white rounded-lg shadow-xl border border-slate-200 hidden group-hover:block z-50 p-4">
+                <div class="relative dropdown-container">
+                    <button onclick="toggleDropdown('apiKeyDropdown')" class="bg-yellow-600 hover:bg-yellow-700 text-white p-1.5 sm:p-2 rounded-lg transition-colors text-sm shadow-sm" title="設定 API Key"><i class="fas fa-key"></i></button>
+                    <div id="apiKeyDropdown" class="absolute right-0 top-full mt-2 w-64 sm:w-72 bg-white rounded-lg shadow-xl border border-slate-200 hidden z-50 p-4">
                         <label class="block text-xs font-bold text-slate-700 mb-2">Google Gemini API Key</label>
                         <div class="flex items-center bg-slate-50 rounded px-2 py-1.5 border border-slate-300 focus-within:ring-2 focus-within:ring-yellow-500 transition-all mb-2">
                             <i class="fas fa-key text-slate-400 text-xs mr-2"></i>
@@ -161,13 +161,13 @@
                 </div>
 
                 <!-- User Profile (Dropdown) -->
-                <div class="relative group">
-                    <button class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors shadow-sm">
+                <div class="relative dropdown-container">
+                    <button onclick="toggleDropdown('userProfileDropdown')" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors shadow-sm">
                         <i class="fas fa-user-circle text-lg"></i>
                         <span id="currentUserDisplay" class="text-xs sm:text-sm font-medium truncate max-w-[80px] sm:max-w-[120px]"></span>
                         <i class="fas fa-chevron-down text-[10px]"></i>
                     </button>
-                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-200 hidden group-hover:block z-50">
+                    <div id="userProfileDropdown" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-200 hidden z-50">
                         <div class="p-3 border-b border-slate-100 bg-slate-50 rounded-t-lg">
                             <p class="text-[10px] text-white font-bold bg-indigo-500 inline-block px-2 py-0.5 rounded uppercase" id="currentUserRole"></p>
                             <p class="text-xs text-slate-500 truncate mt-1.5" id="currentUserEmailFull"></p>
@@ -665,7 +665,25 @@
                 }
             });
         });
-        window.saveApiKey = () => { apiKey = document.getElementById('apiKeyInput').value.trim(); localStorage.setItem('gemini_api_key', apiKey); showToast('金鑰已儲存'); };
+        
+        // 儲存金鑰並自動關閉選單
+        window.saveApiKey = () => { apiKey = document.getElementById('apiKeyInput').value.trim(); localStorage.setItem('gemini_api_key', apiKey); showToast('金鑰已儲存'); document.getElementById('apiKeyDropdown')?.classList.add('hidden'); };
+
+        // 點擊控制下拉選單展開/收合
+        window.toggleDropdown = (id) => {
+            ['apiKeyDropdown', 'userProfileDropdown'].forEach(dropdownId => {
+                if (dropdownId !== id) document.getElementById(dropdownId)?.classList.add('hidden');
+            });
+            document.getElementById(id)?.classList.toggle('hidden');
+        };
+        
+        // 點擊畫面其他空白處，自動收合所有下拉選單
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-container')) {
+                document.getElementById('apiKeyDropdown')?.classList.add('hidden');
+                document.getElementById('userProfileDropdown')?.classList.add('hidden');
+            }
+        });
 
         // ==========================================
         // 多模態檔案處理 (Multimodal)
