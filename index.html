@@ -785,6 +785,11 @@
             document.getElementById('imagePrompt').innerText = extract('圖像生成 Prompt')||'無';
             document.getElementById('musicPrompt').innerText = extract('音樂生成 Prompt')||'無';
             document.getElementById('videoPrompt').innerText = extract('影片生成 Prompt')||'無';
+            
+            // 執行綁定複製按鈕
+            enhanceMarkdownBlocks('contentDisplay');
+            enhanceMarkdownBlocks('titleDisplay');
+            enhanceMarkdownBlocks('summaryDisplay');
         }
 
         // AI Tools
@@ -802,7 +807,8 @@
         window.handleAiQuotes = async () => {
             const btn = document.getElementById('btnAiQuotes'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin text-yellow-600"></i> 提煉中';
             document.getElementById('aiToolResultContainer').classList.remove('hidden'); document.getElementById('aiToolResultContent').innerHTML = '<div class="dot-flashing mx-auto my-4"></div>'; document.getElementById('aiToolResultTitle').innerText = '提煉社群金句中...';
-            try { renderToolResult('社群金句圖卡提案', 'fa-quote-right', await callGeminiAPI(`從文章提煉5句金句:\n${lastGeneratedContent}\n每句下方附上 ChatGPT Image Prompt (英文)，必須含 "金句內容" 與 "@ 2020 TonyStudio" 浮水印指令，直式比例。`), false); } 
+            // 強化提示詞：明確要求將 Prompt 包裝在 markdown 程式碼區塊內
+            try { renderToolResult('社群金句圖卡提案', 'fa-quote-right', await callGeminiAPI(`從文章提煉5句金句:\n${lastGeneratedContent}\n每句下方附上 ChatGPT Image Prompt (英文)，必須含 "金句內容" 與 "@ 2020 TonyStudio" 浮水印指令，直式比例。\n【重要規定】請務必將「每一句的英文 Prompt」單獨放在一個 Markdown 程式碼區塊 (\`\`\`) 內，以便讀者複製。`), false); } 
             catch(e){ renderToolResult('錯誤', 'fa-times', '提煉失敗', false); } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-quote-right text-yellow-600"></i> 提煉社群金句'; }
         };
         function renderToolResult(title, icon, md, showOpt) {
@@ -810,6 +816,9 @@
             let html = marked.parse(md);
             if(showOpt) html += `<div class="mt-5 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100"><label class="text-xs font-bold text-indigo-800 mb-1 block">作者回饋與修改指示</label><textarea id="authorFeedback" class="w-full rounded border border-indigo-200 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-indigo-400 placeholder-indigo-300" placeholder="例如：我覺得第二段太生硬，請加一點幽默感..."></textarea><button id="btnOptimize" onclick="handleAiOptimize()" class="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 transition-colors text-white py-2 rounded font-bold text-sm shadow-sm">融合意見重新生成全文</button></div>`;
             document.getElementById('aiToolResultContent').innerHTML = html;
+            
+            // 執行綁定複製按鈕
+            enhanceMarkdownBlocks('aiToolResultContent');
         }
 
         // ==========================================
